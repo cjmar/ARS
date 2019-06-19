@@ -1,8 +1,6 @@
 from database.schema import *
-import json
 
 
-# api to interact with database
 class Database:
     def __init__(self, base):
         self.base = base
@@ -12,16 +10,21 @@ class Database:
         self.base.session.remove()
 
     # -------------------- Page --------------------------------
-    def insert_page(self, url, locations):  # location is a list of possible ad locations
+    def insert_page(self, url):
         if Page.query.get(url) is None:
             # owner of the website uses this
             self.base.session.add(Page(
                 url=url,
-                rank=1,
-                locations=json.dumps(locations),
-                avgActiveRatio=0,  # default
-                avgFocusRatio=0  # default
+                avgActiveRatio=0,
+                avgFocusRatio=0,
+                avgVisitTime=0
             ))
+            self.base.session.commit()
+
+    def insert_default(self):
+        if User.query.filter_by(username="admin").first() is None:
+            admin = User(username="admin", password="password")
+            self.base.session.add(admin)
             self.base.session.commit()
 
     def get_all_pages(self):
@@ -30,30 +33,44 @@ class Database:
     def get_page(self, url):
         return self.base.session.query(Page).get(url)
 
-    # -------------------- WebpageVisits --------------------
-    def insert_webpage_visit(self, url, activeRatio, focusRatio):
+    # -------------------- User ---------------------------------
+
+    def get_user(self, user):
+        user_name = self.base.session.query(User).filter_by(username=user).first()
+        return user_name
+
+    def get_id(self, id_user):
+        user_name = self.base.session.query(User).get(int(id_user))
+        return user_name
+
+    # -------------------- PageVisit -----------------------------
+    def insert_page_visit(self, url, activeRatio, focusRatio, visitTime):
         # Insert the web page visit
-        self.base.session.add(WebsiteVisits(
+        self.base.session.add(PageVisit(
             focusRatio=focusRatio,
             activeRatio=activeRatio,
+            visitTime=visitTime,
             url=url))
 
-        # Update average focus/active ratio everytime a new visti
-        visits = WebsiteVisits.query.filter_by(url=url).all()
+        # Update average focus/active ratio every time a new visit
+        visits = PageVisit.query.filter_by(url=url).all()
         activeRatios = 0
         focusRatios = 0
+        visitTimes = 0
         for visit in visits:
             if visit.activeRatio is not None and visit.focusRatio is not None:
                 activeRatios += visit.activeRatio
                 focusRatios += visit.focusRatio
+                visitTimes += visit.visitTime
         page = Page.query.get(url)
         page.avgActiveRatio = activeRatios / len(visits)
         page.avgFocusRatio = focusRatios / len(visits)
+        page.avgVisitTime = visitTimes / len(visits)
 
         self.base.session.commit()
 
-    def get_webpage_visits(self, url):
-        return self.base.session.query(WebsiteVisits).filter_by(url=url).all()
+    def get_page_visits(self, url):
+        return self.base.session.query(PageVisit).filter_by(url=url).all()
 
     # -------------------- PageKeyword ---------------------
     def insert_keywords(self, url, keywords):

@@ -330,7 +330,7 @@ var riveted = (function () {
         var visiableTime = visitTime - hiddenTime;
         var fR = Math.floor((visiableTime / visitTime) * 100);
 
-        var outputData = {"url": siteURL, "activeRatio": aR, "focusRatio": fR};
+        var outputData = {"url": siteURL, "activeRatio": aR, "focusRatio": fR, "visitTime": visiableTime};
 
         outputData = JSON.stringify(outputData);
         console.log(outputData);
@@ -359,7 +359,7 @@ var riveted = (function () {
         window.addEventListener("beforeunload", function (event) {
 
             //to display a confirm alert uncomment the line below
-            event.returnValue = "Are you sure?";
+            // event.returnValue = "Are you sure?";
 
             var activeRatio = Math.floor((clockTime / visitTime) * 100);
             console.log("Active Ratio: ", activeRatio);

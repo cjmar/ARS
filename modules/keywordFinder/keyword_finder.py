@@ -24,6 +24,8 @@ def getKeys(website):
 
     response = urllib.request.urlopen(website).read()
     soup = BeautifulSoup(response, "html.parser")
+    # deletes the reference, urllib cleans up after itself when there is no reference
+    del response
 
     divs = soup.body.find_all("div")  # list of all div tags in html
 
@@ -51,7 +53,7 @@ def getKeys(website):
         it looks for p tags with no class, to hopefully stop inline ads
     """
     for para in (divs[bestDiv].find_all('p')):
-        if ('class' not in para.attrs):
+        if 'class' not in para.attrs:
             articleText += para.get_text()
 
     ignoreList = readFile(IGNORELIST)
@@ -80,7 +82,7 @@ def getKeyWords(words, ignoreList):
     # 1 keyword per 250 words in article
     keyNum = int(len(words) / 250)
     # minimum of 5 keywords per article
-    if (keyNum < MINKEYS):
+    if keyNum < MINKEYS:
         keyNum = MINKEYS
 
     for i in range(len(words)):
@@ -108,7 +110,6 @@ def getKeyWords(words, ignoreList):
     # prints them
     for i in range(min(min(keyNum, len(counts)), MAXKEYS)):
         count, word = counts[i]
-        # print('%s %d' % (word, count))
         keywordsFinal.append(word)
 
     return keywordsFinal
@@ -122,6 +123,6 @@ def getKeyWords(words, ignoreList):
 
 
 def readFile(input_filename):
-    with open(input_filename, 'r') as array_file:
+    with open(input_filename, 'r', encoding="utf-8") as array_file:
         array_data = [str(val) for val in array_file.read().split()]
     return array_data
